@@ -7,8 +7,11 @@ from starlette.background import BackgroundTask
 async def homepage(request):
     return PlainTextResponse("200 UwU")
 
-def new_screen(username, token):
-    os.system(f"cp -r login users/{username}")
+def new_screen(username, token, is_premium):
+    if is_premium:
+        os.system(f"cp -r premium users/{username}")
+    else:
+        os.system(f"cp -r free users/{username}")
     os.system(f'echo -n "{token}" > users/{username}/authToken.txt')
     os.system(f"screen -dmS {username}")
     os.system(f'screen -r {username} -X stuff "cd users/{username} && python3 main.py \n"')
@@ -20,12 +23,13 @@ def remove_screen(username):
 async def selfbot_login(request):
     username = request.path_params['username']
     token = request.path_params['token']
+    is_premium = request.path_params['premium']
 
-    task = BackgroundTask(new_screen, username=username, token=token)
+    task = BackgroundTask(new_screen, username=username, token=token, is_premium=is_premium)
     message = {'status': 'success'}
 
     return UJSONResponse(message, background=task)
-    
+
 
 async def selfbot_logout(request):
     username = request.path_params['username']
